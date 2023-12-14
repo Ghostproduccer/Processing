@@ -33,11 +33,27 @@ void draw() {
   
   ellipse(mouseX, mouseY, 160, 160);
   
-  strokeWeight(3);
-  stroke(naranja);
-  line(random(width), random(height), random(width), random(height));
-  
-  stroke(gris);
-  line(random(width), random(height), random(width), random(height));
+   for (int i = 0; i < mouseX/50; i++) {
+    push();
+    strokeWeight(3);
+    // Elige un número aleatorio de 1 a 4
+    int numeroAleatorio = int(random(1, 4));
+
+    // Elige un color correspondiente al número aleatorio
+    switch(numeroAleatorio) {
+      case 1:
+        stroke(negro);
+        break;
+      case 2:
+        stroke(gris);
+        break;
+      case 3:
+        stroke(naranja);
+        break;
+    }
+    
+    line(random(width), random(height), random(width), random(height));
+    pop();
+  }
   
 }
