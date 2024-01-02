@@ -1,3 +1,3 @@
 # Processing
 
-My collection of some Processing Sketches
+Collection of some Processing Sketches
