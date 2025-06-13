@@ -1,0 +1,103 @@
+PImage img;
+PGraphics pg;
+
+float hue;
+
+float TILES_X = 30; // Reduced for larger characters
+float TILES_Y = TILES_X;
+float TILE_W, TILE_H;
+
+
+PFont font;
+
+String CHARS = "█▀▄▌▐"; // Minimal, impactful character set
+
+color[] palette = {
+  #CFF27E, // Lime Green
+  #FF220C, // Bright Red
+  #868686, // Medium Gray
+  #000000, // Black
+  #FFFFFF  // White
+};
+
+boolean needsRedraw = true;
+
+void setup() {
+  size(900, 900, P3D);
+  img = loadImage("img/sonic2.jpg");
+  img.resize(width, height);
+  font = createFont("IBMPlexMono-Regular.ttf", 1000);
+  
+  pg = createGraphics(width, height, P3D);
+  TILE_W = width / TILES_X;
+  TILE_H = height / TILES_Y;
+}
+
+void draw() {
+  if (needsRedraw) {
+    generateImage();
+    needsRedraw = false;
+  }
+}
+
+void generateImage() {
+  pg.beginDraw();
+  pg.background(palette[4]); // White background
+  pg.imageMode(CENTER);
+  pg.translate((width / 2), height / 2);
+  pg.tint(255, 180); // Subtle tint
+  pg.image(img, 0, 0);
+  pg.endDraw();
+  
+  background(palette[4]); // White background
+  noStroke();
+  
+  textFont(font);
+  textSize(24); // Larger base text size
+  textAlign(CENTER, CENTER);
+  translate(TILE_W / 2, TILE_H / 2);
+  PImage buffer = pg.get();
+  
+  for (int x = 0; x < TILES_X; x++) {
+    for (int y = 0; y < TILES_Y; y++) {
+      int px = int(x * TILE_W);
+      int py = int(y * TILE_H);
+      
+      color c = buffer.get(px, py);
+      float b = brightness(c);
+      
+      int selector = int(map(b, 0, 255, 0, CHARS.length() - 1));
+      selector = constrain(selector, 0, CHARS.length() - 1);
+      char ch = CHARS.charAt(selector);
+      
+      // Refined color selection focusing on greys and whites
+      color selectedColor;
+      if (b < 85) {
+        selectedColor = (random(1) < 0.7) ? palette[2] : palette[1]; // Mostly gray, some red
+      } else if (b > 170) {
+        selectedColor = (random(1) < 0.8) ? palette[4] : palette[0]; // Mostly white, some lime
+      } else {
+        selectedColor = palette[2]; // Mid-tones are gray
+      }
+      
+      push();
+      translate(x * TILE_W, y * TILE_H);
+      
+      // Occasional high-impact effects
+      if (random(1) < 0.05) {
+        textSize(32); // Even larger for emphasis
+        fill(palette[1]); // Red for impact
+      } else {
+        fill(selectedColor);
+      }
+      
+      text(ch, 0, 0);
+      pop();
+    }
+  }
+}
+
+void mousePressed() {
+  noiseSeed(int(random(10000)));
+  needsRedraw = true;
+}

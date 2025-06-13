@@ -1,0 +1,128 @@
+PImage img;
+PGraphics pg;
+
+float hue;
+
+float TILES_X = 60;
+float TILES_Y = TILES_X;
+float TILE_W, TILE_H;
+
+
+PFont font;
+
+//String CHARS = "▁▄0▜B▟1▙▄█▓▀▐3▌E▞4▓▒░";
+String CHARS = "▗▘▜▟▙▄▀▐▌▞▚▝▖▛█";
+//String CHARS = " ._▂▃▄▅▆▇ ░▒▓█ ▊▋▌▍▎.";
+//String CHARS = " ._▂▃▄▀▀▅▆▇░░▒▓█░ ";
+//String CHARS = "┃━┏┓┗┛┣┫┳┻╋█▀▄▌▐░▒▓"; // Enhanced character set for more impact
+
+color[] palette = {
+  #CFF27E, // Lime Green
+  #FF220C, // Bright Red
+  #868686, // Medium Gray
+  #000000, // Black
+  #FFFFFF  // White
+};
+
+boolean needsRedraw = true;
+
+void setup() {
+  size(900, 900, P3D);
+  img = loadImage("img/sonic2.jpg");
+  img.resize(width, height);
+  font = createFont("IBMPlexMono-Regular.ttf", 1000);
+  
+  pg = createGraphics(width, height, P3D);
+  TILE_W = width / TILES_X;
+  TILE_H = height / TILES_Y;
+}
+
+void draw() {
+  if (needsRedraw) {
+    generateImage();
+    needsRedraw = false;
+  }
+}
+
+void generateImage() {
+  pg.beginDraw();
+  pg.background(palette[3]);
+  pg.imageMode(CENTER);
+  pg.translate((width / 2), height / 2);
+  // Add glitch effect to source image
+  pg.tint(255, random(200, 255));
+  pg.image(img, random(-5, 5), random(-5, 5));
+  pg.endDraw();
+  
+  background(palette[3]); // Black background for more contrast
+  noStroke();
+  
+  textFont(font);
+  textSize(random(11, 14)); // Varying text size
+  textAlign(CENTER, CENTER);
+  translate(TILE_W / 2, TILE_H / 2);
+  PImage buffer = pg.get();
+  
+  float glitchChance = random(0.15); // Chance of glitch per frame
+  
+  for (int x = 0; x < TILES_X; x++) {
+    for (int y = 0; y < TILES_Y; y++) {
+      int px = int(x * TILE_W);
+      int py = int(y * TILE_H);
+      
+      // Add glitch offset
+      if (random(1) < glitchChance) {
+        px += int(random(-10, 10));
+        py += int(random(-10, 10));
+      }
+      
+      color c = buffer.get(constrain(px, 0, width-1), constrain(py, 0, height-1));
+      float b = brightness(c);
+      
+      // More aggressive noise pattern
+      float staticNoise = noise(x * 0.2 + random(100), y * 0.2 + random(100));
+      int selector = int(map(b + staticNoise * 60, 0, 255, CHARS.length() - 1, 0));
+      selector = constrain(selector, 0, CHARS.length() - 1);
+      
+      char ch = CHARS.charAt(selector);
+      
+      // Enhanced color selection for techno aesthetic
+      color selectedColor;
+      if (b < 20) {
+        selectedColor = (random(1) < 0.8) ? palette[3] : palette[1]; // Mostly black, some red
+      } else if (b > 85) {
+        // Bright areas use more aggressive colors
+        selectedColor = (random(1) < 0.7) ? palette[1] : palette[0]; // Favor red over lime
+      } else {
+        // Middle tones with more contrast
+        selectedColor = (random(1) < 0.5) ? palette[2] : palette[1]; // Mix of gray and red
+      }
+      
+      fill(selectedColor);
+      push();
+      translate(x * TILE_W, y * TILE_H);
+      
+      // More aggressive character manipulation
+      if (random(1) < 0.15) {
+        rotate(random(-0.5, 0.5));
+        scale(random(0.8, 1.2));
+      }
+      
+      // Occasional character doubling for glitch effect
+      if (random(1) < 0.05) {
+        fill(palette[1]); // Red
+        text(ch, 1, 1);
+        fill(palette[0]); // Lime
+        text(ch, -1, -1);
+      } else {
+        text(ch, 0, 0);
+      }
+      pop();
+    }
+  }
+}
+
+void mousePressed() {
+  noiseSeed(int(random(10000)));
+  needsRedraw = true;
+}
