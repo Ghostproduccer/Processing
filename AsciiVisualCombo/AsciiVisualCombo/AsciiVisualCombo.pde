@@ -3,7 +3,7 @@ PImage backgroundImage;
 PGraphics mainPg;
 PGraphics bgPg;
 
-float TILES_X = 100;
+float TILES_X = 200; // Increased density
 float TILES_Y = TILES_X;
 float TILE_W, TILE_H;
 
@@ -128,9 +128,7 @@ void generateBackground() {
       
       int selector = int(map(b, 0, 255, 0, BG_CHARS.length() - 1));
       selector = constrain(selector, 0, BG_CHARS.length() - 1);
-      char ch = BG_CHARS.charAt(selector);
-      
-      color selectedColor;
+      char ch = BG_CHARS.charAt(selector);      color selectedColor;
       if (b < 85) {
         selectedColor = (random(1) < 0.7) ? palette[2] : palette[1];
       } else if (b > 170) {
@@ -156,20 +154,20 @@ void generateBackground() {
   translate(-TILE_W / 2, -TILE_H / 2); // Reset translation for main ASCII
 }
 
-void drawMainAscii() {
-  mainPg.beginDraw();
+void drawMainAscii() {  mainPg.beginDraw();
   mainPg.background(0);
   mainPg.imageMode(CENTER);
   mainPg.translate(width/2, height/2);
   mainPg.image(mainImage, 0, 0);
+  mainPg.filter(POSTERIZE, 8); // Enhance contrast
   mainPg.endDraw();
   
   textFont(font);
-  textSize(8); // Smaller text size for more detail
+  textSize(3); // Even smaller for more detail
   textAlign(CENTER, CENTER);
   
   // Calculate the center region for the main ASCII art (2/3 of the screen)
-  float centerScale = 0.66;
+  float centerScale = 0.75;
   float centerWidth = width * centerScale;
   float centerHeight = height * centerScale;
   float startX = (width - centerWidth) / 2;
@@ -190,22 +188,30 @@ void drawMainAscii() {
     for (int y = 0; y < TILES_Y; y++) {
       // Calculate position in the center region
       float px = map(x, 0, TILES_X, startX, startX + centerWidth);
-      float py = map(y, 0, TILES_Y, startY, startY + centerHeight);
-      
-      // Sample the image at this position
+      float py = map(y, 0, TILES_Y, startY, startY + centerHeight);      // Sample the image at this position
       color c = buffer.get(int(map(x, 0, TILES_X, 0, width)),
                           int(map(y, 0, TILES_Y, 0, height)));
       float b = brightness(c);
       
-      // Use a simpler character set for more figurative representation
+      // Simple character mapping
       char ch = ' ';
       if (b < 51) ch = '█';
       else if (b < 102) ch = '▓';
       else if (b < 153) ch = '▒';
       else if (b < 204) ch = '░';
-        fill(0); // Always black for better contrast
+      else ch = ' ';
+      
       push();
       translate(px, py);
+      
+      // Simple glitch effect
+      if (random(1) < 0.02) { // 2% chance per character
+        translate(random(-2, 2), random(-2, 2));
+        if (random(1) < 0.3) {
+          fill(palette[1]); // Red glitch
+        }
+      }
+      
       text(ch, 0, 0);
       pop();
     }
@@ -228,12 +234,8 @@ void keyPressed() {
 void mousePressed() {
   if (mouseButton == RIGHT) {
     currentCharSet = (currentCharSet + 1) % charSets.length;
-    BG_CHARS = charSets[currentCharSet];
-  } else if (mouseButton == LEFT) {
-    TILES_X = random(20, 40);
-    TILES_Y = TILES_X;
-    TILE_W = width / TILES_X;
-    TILE_H = height / TILES_Y;
+    BG_CHARS = charSets[currentCharSet];  } else if (mouseButton == LEFT) {
+    // Only randomize background elements, not the resolution
     glitchEffect = random(1) < 0.5;
     glitchAmount = random(10, 30);
     rotationAngle = random(-PI/8, PI/8);
